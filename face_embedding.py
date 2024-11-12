@@ -26,7 +26,7 @@ class FaceRecognizer:
         return np.array(face_descriptor)
 
     # 두 임베딩 벡터의 유사도를 계산하는 함수
-    def calculate_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray, threshold: float = 0.3):
+    def calculate_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray, threshold: float = 0.4):
         distance = np.linalg.norm(embedding1 - embedding2)
         is_similar = bool(distance < threshold)  # numpy.bool -> Python bool 타입으로 변환
         return {
