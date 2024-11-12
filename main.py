@@ -3,12 +3,17 @@ from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 import cv2
+import os
 
 from clock_model_color import ColorClockVAEHandler
 from clock_model_mono import MonoClockVAEHandler
 
 app = fastapi.FastAPI()
-color_model = ColorClockVAEHandler(model_path="clock-vae-color-140x-v1-500epoch.pth")
+
+color_model_path = os.getenv("COLOR_MODEL_PATH")
+mono_model_path = os.getenv("MONO_MODEL_PATH")
+
+color_model = ColorClockVAEHandler(model_path=color_model_path)
 mono_model = MonoClockVAEHandler(model_path="clock-vae-mono-100x-v1-1000epoch.pth", size=100)
 
 class TimeInput(BaseModel):
