@@ -1,9 +1,15 @@
 # 베이스 이미지
 FROM python:3.11
 
-# 필요한 라이브러리 설치 (libGL)
+# 필요한 시스템 라이브러리 설치
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
+    build-essential \
+    cmake \
+    libx11-dev \
+    libatlas-base-dev \
+    libgtk-3-dev \
+    libboost-python-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 작업 디렉토리 설정
@@ -28,6 +34,7 @@ RUN python -c "from huggingface_hub import hf_hub_download; \
 COPY main.py .
 COPY clock_model_color.py .
 COPY clock_model_mono.py .
+COPY face_embedding.py .
 
 # main.py 실행
 CMD ["fastapi", "run", "main.py"]
