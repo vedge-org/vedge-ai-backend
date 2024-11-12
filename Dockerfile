@@ -24,8 +24,8 @@ RUN python -c "from huggingface_hub import hf_hub_download; \
 
 # 애플리케이션 파일 복사
 COPY main.py .
-COPY clock_model_color .
-COPY clock_model_mono .
+COPY clock_model_color.py .
+COPY clock_model_mono.py .
 
 # main.py 실행
 CMD ["python", "main.py"]
