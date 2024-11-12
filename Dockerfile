@@ -28,8 +28,6 @@ RUN python -c "from huggingface_hub import hf_hub_download; \
 COPY main.py .
 COPY clock_model_color.py .
 COPY clock_model_mono.py .
-COPY shape_predictor_68_face_landmarks.dat .
-COPY dlib_face_recognition_resnet_model_v1.dat .
 
 # main.py 실행
 CMD ["fastapi", "run", "main.py"]
