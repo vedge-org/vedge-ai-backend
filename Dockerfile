@@ -28,4 +28,4 @@ COPY clock_model_color.py .
 COPY clock_model_mono.py .
 
 # main.py 실행
-CMD ["python", "main.py"]
+CMD ["fastapi", "run", "main.py"]

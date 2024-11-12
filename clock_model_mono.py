@@ -6,6 +6,51 @@ import cv2
 from io import BytesIO
 from PIL import Image
 
+
+class ConditionalVAE(nn.Module):
+    def __init__(self, input_dim, condition_dim, latent_dim):
+        super(ConditionalVAE, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_dim + condition_dim, 400),
+            nn.ReLU(),
+            nn.Linear(400, 200),
+            nn.ReLU(),
+        )
+        self.fc_mu = nn.Linear(200, latent_dim)
+        self.fc_logvar = nn.Linear(200, latent_dim)
+
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_dim + condition_dim, 200),
+            nn.ReLU(),
+            nn.Linear(200, 400),
+            nn.ReLU(),
+            nn.Linear(400, input_dim),
+            nn.Sigmoid()
+        )
+
+    def encode(self, x, condition):
+        x = x.view(x.size(0), -1)
+        condition = condition.view(condition.size(0), -1)
+        x_cond = torch.cat([x, condition], dim=1)
+        h = self.encoder(x_cond)
+        mu = self.fc_mu(h)
+        logvar = self.fc_logvar(h)
+        return mu, logvar
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z, condition):
+        z_cond = torch.cat([z, condition], dim=1)
+        return self.decoder(z_cond)
+
+    def forward(self, x, condition):
+        mu, logvar = self.encode(x, condition)
+        z = self.reparameterize(mu, logvar)
+        return self.decode(z, condition), mu, logvar
+
 class MonoClockVAEHandler:
     def __init__(self, model_path, size=140, latent_dim=20, device=None):
         self.size = size
@@ -16,56 +61,12 @@ class MonoClockVAEHandler:
         
         self.model = self.load_model(model_path)
 
-    class ConditionalVAE(nn.Module):
-        def __init__(self, input_dim, condition_dim, latent_dim):
-            super(MonoClockVAEHandler.ConditionalVAE, self).__init__()
-            self.encoder = nn.Sequential(
-                nn.Linear(input_dim + condition_dim, 400),
-                nn.ReLU(),
-                nn.Linear(400, 200),
-                nn.ReLU(),
-            )
-            self.fc_mu = nn.Linear(200, latent_dim)
-            self.fc_logvar = nn.Linear(200, latent_dim)
-
-            self.decoder = nn.Sequential(
-                nn.Linear(latent_dim + condition_dim, 200),
-                nn.ReLU(),
-                nn.Linear(200, 400),
-                nn.ReLU(),
-                nn.Linear(400, input_dim),
-                nn.Sigmoid()
-            )
-
-        def encode(self, x, condition):
-            x = x.view(x.size(0), -1)
-            condition = condition.view(condition.size(0), -1)
-            x_cond = torch.cat([x, condition], dim=1)
-            h = self.encoder(x_cond)
-            mu = self.fc_mu(h)
-            logvar = self.fc_logvar(h)
-            return mu, logvar
-
-        def reparameterize(self, mu, logvar):
-            std = torch.exp(0.5 * logvar)
-            eps = torch.randn_like(std)
-            return mu + eps * std
-
-        def decode(self, z, condition):
-            z_cond = torch.cat([z, condition], dim=1)
-            return self.decoder(z_cond)
-
-        def forward(self, x, condition):
-            mu, logvar = self.encode(x, condition)
-            z = self.reparameterize(mu, logvar)
-            return self.decode(z, condition), mu, logvar
-
     def load_model(self, model_path):
-        model = self.ConditionalVAE(self.input_dim, self.condition_dim, self.latent_dim).to(self.device)
-        checkpoint = torch.load(model_path, map_location=self.device)
+        model = ConditionalVAE(self.input_dim, self.condition_dim, self.latent_dim).to(self.device)
+        checkpoint = torch.load(model_path, map_location=self.device, weights_only=True)
         model.load_state_dict(checkpoint['model_state_dict'])
         model.eval()
-        print("Model loaded successfully.")
+        print("MonoClockVAEHandler model loaded")
         return model
 
     def generate_image(self, hour, minute):
