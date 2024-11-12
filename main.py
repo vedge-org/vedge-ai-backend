@@ -78,3 +78,23 @@ async def check_similarity(request: SimilarityRequest):
 
     result = face_recognizer.calculate_similarity(embedding1, embedding2)
     return result
+
+@app.post("/check_two_face/")
+async def check_two_face(file1: UploadFile = File(...), file2: UploadFile = File(...)):
+    contents1 = await file1.read()
+    contents2 = await file2.read()
+
+    np_img1 = np.frombuffer(contents1, np.uint8)
+    np_img2 = np.frombuffer(contents2, np.uint8)
+
+    image1 = cv2.imdecode(np_img1, cv2.IMREAD_COLOR)
+    image2 = cv2.imdecode(np_img2, cv2.IMREAD_COLOR)
+
+    embedding1 = face_recognizer.get_face_embedding_from_image(image1)
+    embedding2 = face_recognizer.get_face_embedding_from_image(image2)
+
+    if embedding1 is None or embedding2 is None:
+        raise HTTPException(status_code=400, detail="이미지에서 얼굴을 찾을 수 없습니다.")
+
+    result = face_recognizer.calculate_similarity(embedding1, embedding2)
+    return result
