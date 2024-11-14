@@ -35,6 +35,7 @@ COPY main.py .
 COPY clock_model_color.py .
 COPY clock_model_mono.py .
 COPY face_embedding.py .
+COPY color_picker.py .
 
 # main.py 실행
 CMD ["fastapi", "run", "main.py"]
