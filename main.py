@@ -11,6 +11,7 @@ from typing import List
 from clock_model_color import ColorClockVAEHandler
 from clock_model_mono import MonoClockVAEHandler
 from face_embedding import FaceRecognizer
+from color_picker import extract_dominant_color_with_priority
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -98,3 +99,16 @@ async def check_two_face(file1: UploadFile = File(...), file2: UploadFile = File
 
     result = face_recognizer.calculate_similarity(embedding1, embedding2)
     return result
+
+
+@app.post("/extract_dominant_color/")
+async def extract_dominant_color(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        image = BytesIO(contents)
+
+        dominant_color = extract_dominant_color_with_priority(image)
+
+        return {"dominant_color": dominant_color}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
